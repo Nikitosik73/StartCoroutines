@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.util.Log
 import android.widget.Toast
 import androidx.core.view.isVisible
 import com.example.startcoroutines.databinding.ActivityMainBinding
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadData() {
+        Log.d("MainActivity", "Load started: $this")
         binding.progressBar.isVisible = true
         binding.buttonDownload.isEnabled = false
         loadCity { city ->
@@ -33,6 +35,7 @@ class MainActivity : AppCompatActivity() {
                 binding.textViewTemperature.text = temp.toString()
                 binding.progressBar.isVisible = false
                 binding.buttonDownload.isEnabled = true
+                Log.d("MainThread", "Load finished: $this")
             }
         }
     }
