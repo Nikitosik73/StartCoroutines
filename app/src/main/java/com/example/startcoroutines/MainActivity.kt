@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.example.startcoroutines.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -23,10 +24,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         binding.buttonDownload.setOnClickListener {
-//            lifecycleScope.launch {
-//                loadData()
-//            }
-            loadDataWithoutCoroutines()
+
+            binding.progressBar.isVisible = true
+            binding.buttonDownload.isEnabled = false
+            val jobCity = lifecycleScope.launch {
+                val city = loadCity()
+                binding.textViewCity.text = city
+            }
+            val jobTemperature = lifecycleScope.launch {
+                val temperature = loadTemperature()
+                binding.textViewTemperature.text = temperature.toString()
+            }
+            lifecycleScope.launch {
+                jobCity.join()
+                jobTemperature.join()
+                binding.progressBar.isVisible = false
+                binding.buttonDownload.isEnabled = true
+            }
         }
     }
 
@@ -41,6 +55,7 @@ class MainActivity : AppCompatActivity() {
                     loadDataWithoutCoroutines(1, it)
                 }
             }
+
             1 -> {
                 val city = obj as String
                 binding.textViewCity.text = city
@@ -48,6 +63,7 @@ class MainActivity : AppCompatActivity() {
                     loadDataWithoutCoroutines(2, it)
                 }
             }
+
             2 -> {
                 val temp = obj as Int
                 binding.textViewTemperature.text = temp.toString()
@@ -84,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         val city = loadCity()
         // 1
         binding.textViewCity.text = city
-        val temp = loadTemperature(city)
+        val temp = loadTemperature()
         // 2
         binding.textViewTemperature.text = temp.toString()
         binding.progressBar.isVisible = false
@@ -93,16 +109,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun loadCity(): String {
-        delay(5000)
+        delay(1000)
         return "Moscow"
     }
 
-    private suspend fun loadTemperature(city: String): Int {
-        Toast.makeText(
-            this@MainActivity,
-            "Загрузка погоды в городе: $city",
-            Toast.LENGTH_SHORT
-        ).show()
+    private suspend fun loadTemperature(): Int {
         delay(5000)
         return 20
     }
