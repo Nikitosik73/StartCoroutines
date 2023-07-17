@@ -9,10 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.example.startcoroutines.databinding.ActivityMainBinding
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,17 +26,24 @@ class MainActivity : AppCompatActivity() {
 
             binding.progressBar.isVisible = true
             binding.buttonDownload.isEnabled = false
-            val jobCity = lifecycleScope.launch {
+            val deferredCity = lifecycleScope.async {
                 val city = loadCity()
                 binding.textViewCity.text = city
+                city
             }
-            val jobTemperature = lifecycleScope.launch {
-                val temperature = loadTemperature()
-                binding.textViewTemperature.text = temperature.toString()
+            val deferredTemperature = lifecycleScope.async {
+                val temp = loadTemperature()
+                binding.textViewTemperature.text = temp.toString()
+                temp
             }
             lifecycleScope.launch {
-                jobCity.join()
-                jobTemperature.join()
+                val city = deferredCity.await()
+                val temp = deferredTemperature.await()
+                Toast.makeText(
+                    this@MainActivity,
+                    "City: $city Temp: $temp",
+                    Toast.LENGTH_SHORT
+                ).show()
                 binding.progressBar.isVisible = false
                 binding.buttonDownload.isEnabled = true
             }
