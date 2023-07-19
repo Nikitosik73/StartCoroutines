@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -19,109 +20,12 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    private val viewModel by viewModels<MainViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        binding.buttonDownload.setOnClickListener {
-
-            binding.progressBar.isVisible = true
-            binding.buttonDownload.isEnabled = false
-            val deferredCity = lifecycleScope.async {
-                val city = loadCity()
-                binding.textViewCity.text = city
-                city
-            }
-            val deferredTemperature = lifecycleScope.async {
-                val temp = loadTemperature()
-                binding.textViewTemperature.text = temp.toString()
-                temp
-            }
-            lifecycleScope.launch {
-                val city = deferredCity.await()
-                val temp = deferredTemperature.await()
-                Toast.makeText(
-                    this@MainActivity,
-                    "City: $city Temp: $temp",
-                    Toast.LENGTH_SHORT
-                ).show()
-                binding.progressBar.isVisible = false
-                binding.buttonDownload.isEnabled = true
-            }
-        }
-    }
-
-    // метода без использования короутин для понимая, как они работают под капотом
-    private fun loadDataWithoutCoroutines(step: Int = 0, obj: Any? = null) {
-        when (step) {
-            0 -> {
-                Log.d("test", "Load started: $this")
-                binding.progressBar.isVisible = true
-                binding.buttonDownload.isEnabled = false
-                loadCityWithoutCoroutines {
-                    loadDataWithoutCoroutines(1, it)
-                }
-            }
-
-            1 -> {
-                val city = obj as String
-                binding.textViewCity.text = city
-                loadTemperatureWithoutCoroutines(city) {
-                    loadDataWithoutCoroutines(2, it)
-                }
-            }
-
-            2 -> {
-                val temp = obj as Int
-                binding.textViewTemperature.text = temp.toString()
-                binding.progressBar.isVisible = false
-                binding.buttonDownload.isEnabled = true
-                Log.d("test", "Load finished: $this")
-            }
-        }
-    }
-
-    private fun loadCityWithoutCoroutines(callback: (String) -> Unit) {
-        Handler(Looper.getMainLooper()).postDelayed({
-            callback.invoke("Moscow")
-        }, 5000)
-    }
-
-    private fun loadTemperatureWithoutCoroutines(city: String, callback: (Int) -> Unit) {
-        Toast.makeText(
-            this@MainActivity,
-            "Загрузка погоды в городе: $city",
-            Toast.LENGTH_SHORT
-        ).show()
-        Handler(Looper.getMainLooper()).postDelayed({
-            callback.invoke(20)
-        }, 5000)
-    }
-
-
-    private suspend fun loadData() {
-        // 0
-        Log.d("test", "Load started: $this")
-        binding.progressBar.isVisible = true
-        binding.buttonDownload.isEnabled = false
-        val city = loadCity()
-        // 1
-        binding.textViewCity.text = city
-        val temp = loadTemperature()
-        // 2
-        binding.textViewTemperature.text = temp.toString()
-        binding.progressBar.isVisible = false
-        binding.buttonDownload.isEnabled = true
-        Log.d("test", "Load finished: $this")
-    }
-
-    private suspend fun loadCity(): String {
-        delay(1000)
-        return "Moscow"
-    }
-
-    private suspend fun loadTemperature(): Int {
-        delay(5000)
-        return 20
+        viewModel.method()
     }
 }
 
